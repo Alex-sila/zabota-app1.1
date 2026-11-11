@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Забота: давление и пульс</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Экран согласия -->
+  <div id="termsScreen" class="terms-screen" hidden>
+    <div class="terms-box">
+      <h1 class="terms-title">ВНИМАНИЕ! ВАЖНАЯ ИНФОРМАЦИЯ</h1>
+      <ol class="terms-list">
+        <li>Приложение «Забота: давление и пульс» <b>не является медицинским изделием</b>. Оно предназначено исключительно для записи показателей давления, пульса и сахара в личных целях.</li>
+        <li>Приложение <b>не ставит диагнозы</b>, не назначает лечение и не заменяет врача. При плохом самочувствии немедленно вызывайте скорую помощь (103).</li>
+        <li><b>Хранение данных:</b> Приложение работает полностью <b>офлайн</b>. Вся информация хранится <b>только в памяти вашего телефона</b>.</li>
+        <li><b>Потеря данных:</b> Если вы удалите приложение или смените телефон, записи будут утеряны.</li>
+        <li><b>Ответственность:</b> Вы несете полную ответственность за точность вводимых данных.</li>
+      </ol>
+      <p class="terms-note">Нажимая кнопку «Я согласен», вы подтверждаете, что прочитали эти условия.</p>
+      <button id="btnAcceptTerms" class="btn btn-primary btn-huge btn-block">Я СОГЛАСЕН</button>
+    </div>
+  </div>
+
+  <!-- Обучающие слайды -->
+  <div id="onboardingScreen" class="onboarding-screen" hidden>
+    <div class="onboarding-box">
+      <div class="onboarding-slide" id="slide1">
+        <div class="slide-icon">📝</div>
+        <h2>Добавляйте замеры</h2>
+        <p>Нажимайте большие кнопки на главном экране, чтобы записать давление или сахар.</p>
+      </div>
+      <div class="onboarding-slide" id="slide2" hidden>
+        <div class="slide-icon">🚦</div>
+        <h2>Следите за нормой</h2>
+        <p>Приложение само покажет зеленым, желтым или красным цветом, в порядке ли ваше давление.</p>
+      </div>
+      <div class="onboarding-slide" id="slide3" hidden>
+        <div class="slide-icon">👤</div>
+        <h2>Настройте профиль</h2>
+        <p>В меню можно указать свои данные и контакты для экстренной связи.</p>
+      </div>
+      <div class="onboarding-dots">
+        <span class="dot active" id="dot1"></span>
+        <span class="dot" id="dot2"></span>
+        <span class="dot" id="dot3"></span>
+      </div>
+      <button id="btnOnboardingNext" class="btn btn-primary btn-huge btn-block">ДАЛЕЕ</button>
+    </div>
+  </div>
+
+  <!-- Главный экран -->
+  <div id="app" class="app" hidden>
+    <header class="app-header">
+      <button id="btnMenu" class="header-btn" aria-label="Меню">☰</button>
+      <h1 class="app-title">Забота</h1>
+      <button id="btnSos" class="header-btn header-btn-sos" aria-label="SOS">SOS</button>
+    </header>
+
+    <main class="main">
+      <div id="reminderBanner" class="reminder-banner" hidden>
+        <button id="btnCloseBanner" class="close-banner-btn">✕</button>
+        <div id="bannerText"></div>
+      </div>
+
+      <div id="trafficLight" class="traffic-light-container">
+        <div class="traffic-light-circle" id="tlCircle"></div>
+        <div class="traffic-light-text" id="tlText">Нет данных для оценки</div>
+      </div>
+
+      <div class="add-buttons-group">
+        <button id="btnAddPressure" class="btn btn-primary btn-huge add-btn">+ ДОБАВИТЬ ДАВЛЕНИЕ</button>
+        <button id="btnAddSugar" class="btn btn-success btn-huge add-btn">+ ДОБАВИТЬ САХАР</button>
+      </div>
+
+      <div class="list-header">
+        <span>Мои записи</span>
+        <span id="recordsCounter" class="counter"></span>
+      </div>
+
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по цифрам или месяцу...">
+      </div>
+
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="pressure">Давление</button>
+        <button class="filter-btn" data-filter="sugar">Сахар</button>
+      </div>
+
+      <div id="recordsList" class="records-list"></div>
+    </main>
+  </div>
+
+  <!-- Боковое меню (без Excel, PDF и копий) -->
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+  <aside id="sideDrawer" class="side-drawer">
+    <div class="drawer-header">
+      <span>Меню</span>
+      <button id="btnCloseDrawer" class="header-btn" aria-label="Закрыть">✕</button>
+    </div>
+    <nav class="drawer-nav">
+      <button class="drawer-item" data-action="profile">👤 <span>Мой профиль</span></button>
+      <button class="drawer-item" data-action="privacy">🔒 <span>Политика конфиденциальности</span></button>
+      <button class="drawer-item" data-action="termsofuse">📜 <span>Пользовательское соглашение</span></button>
+      <button class="drawer-item drawer-item-danger" data-action="clear">🗑 <span>Очистить все данные</span></button>
+    </nav>
+  </aside>
+
+  <!-- Модальное окно: Давление -->
+  <div id="modalPressure" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Добавить давление</h2>
+      <div class="hint-box">💡 Мерьте давление сидя, после 5 минут отдыха. Рука на столе.</div>
+      <label class="field"><span class="field-label">Верхнее</span><input id="inpSys" class="num-input" readonly inputmode="none" placeholder="—"></label>
+      <label class="field"><span class="field-label">Нижнее</span><input id="inpDia" class="num-input" readonly inputmode="none" placeholder="—"></label>
+      <label class="field"><span class="field-label">Пульс</span><input id="inpPulse" class="num-input" readonly inputmode="none" placeholder="—"></label>
+      <label class="field"><span class="field-label">Дата и время</span><input type="datetime-local" id="inpDateTime" class="date-input"></label>
+      <div class="keypad" data-keypad="pressure">
+        <button type="button" class="key" data-key="1">1</button><button type="button" class="key" data-key="2">2</button><button type="button" class="key" data-key="3">3</button>
+        <button type="button" class="key" data-key="4">4</button><button type="button" class="key" data-key="5">5</button><button type="button" class="key" data-key="6">6</button>
+        <button type="button" class="key" data-key="7">7</button><button type="button" class="key" data-key="8">8</button><button type="button" class="key" data-key="9">9</button>
+        <button type="button" class="key" data-key="back">⌫ Стереть</button><button type="button" class="key" data-key="0">0</button><button type="button" class="key key-done" data-key="done">Готово</button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalPressure">Отмена</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Сахар -->
+  <div id="modalSugar" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Добавить сахар</h2>
+      <div class="hint-box">💡 Кровь на сахар сдают строго натощак (утром, до еды).</div>
+      <label class="field"><span class="field-label">Уровень сахара</span><input id="inpSugar" class="num-input" readonly inputmode="none" placeholder="—"></label>
+      <label class="checkbox-field"><input type="checkbox" id="chkFasting" class="checkbox-big"><span>Натощак</span></label>
+      <label class="field"><span class="field-label">Дата и время</span><input type="datetime-local" id="inpDateTimeSugar" class="date-input"></label>
+      <div class="keypad" data-keypad="sugar">
+        <button type="button" class="key" data-key="1">1</button><button type="button" class="key" data-key="2">2</button><button type="button" class="key" data-key="3">3</button>
+        <button type="button" class="key" data-key="4">4</button><button type="button" class="key" data-key="5">5</button><button type="button" class="key" data-key="6">6</button>
+        <button type="button" class="key" data-key="7">7</button><button type="button" class="key" data-key="8">8</button><button type="button" class="key" data-key="9">9</button>
+        <button type="button" class="key" data-key=".">,</button><button type="button" class="key" data-key="0">0</button><button type="button" class="key" data-key="back">⌫</button>
+        <button type="button" class="key key-done key-wide" data-key="done">Готово</button>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalSugar">Отмена</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Тревожное предупреждение -->
+  <div id="modalWarning" class="modal" hidden>
+    <div class="modal-content" style="border-top: 10px solid var(--danger);">
+      <h2 class="modal-title" style="color: var(--danger-dark);">⚠️ ВНИМАНИЕ!</h2>
+      <p class="modal-text" id="warningText" style="font-size: 1.1em; color: var(--text);">Ваше давление сильно отличается от нормы. Если вы чувствуете себя плохо — немедленно позвоните!</p>
+      <a href="tel:103" class="btn btn-danger btn-huge btn-block">📞 Скорая (103)</a>
+      <button id="btnWarningCallDoctor" class="btn btn-success btn-huge btn-block" style="margin-top: 10px;">📞 Позвонить врачу</button>
+      <button id="btnWarningCallFamily" class="btn btn-primary btn-huge btn-block" style="margin-top: 10px;">📞 Позвонить родственнику</button>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalWarning" style="margin-top: 20px;">Я чувствую себя нормально, закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: SOS (3 кнопки) -->
+  <div id="modalSos" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Помощь</h2>
+      <a href="tel:103" class="btn btn-danger btn-huge btn-block">📞 Скорая (103)</a>
+      <button id="btnCallFamily" class="btn btn-primary btn-huge btn-block" style="margin-top: 10px;">📞 Позвонить родственнику</button>
+      <button id="btnSosSms" class="btn btn-success btn-huge btn-block" style="margin-top: 10px;">✉️ Отправить СМС</button>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalSos" style="margin-top: 15px;">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Профиль -->
+  <div id="modalProfile" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Мой профиль</h2>
+      <label class="field"><span class="field-label">Ваше ФИО</span><input type="text" id="inpFullName" class="text-input" placeholder="Иванов Иван Иванович"></label>
+      <label class="field"><span class="field-label">ФИО вашего врача</span><input type="text" id="inpDoctorName" class="text-input" placeholder="Петрова Анна Ивановна"></label>
+      <label class="field"><span class="field-label">Телефон врача</span><input type="tel" id="inpDoctorPhone" class="text-input" placeholder="+7 900 000-00-00"></label>
+      <label class="field"><span class="field-label">Телефон родственника (для SOS)</span><input type="tel" id="inpFamilyPhone" class="text-input" placeholder="+7 900 000-00-00"></label>
+      <div style="margin: 15px 0; padding: 15px; background: #eaf3fc; border-radius: 14px; border: 2px dashed var(--primary);">
+        <p style="font-weight: 700; margin-bottom: 10px; color: var(--primary-dark);">Ваша рабочая норма давления:</p>
+        <div style="display: flex; gap: 10px;">
+          <label class="field" style="flex: 1; margin-bottom: 0;"><span class="field-label">Верхнее</span><input type="number" id="inpTargetSys" class="text-input" placeholder="120" style="text-align: center;"></label>
+          <label class="field" style="flex: 1; margin-bottom: 0;"><span class="field-label">Нижнее</span><input type="number" id="inpTargetDia" class="text-input" placeholder="80" style="text-align: center;"></label>
+        </div>
+      </div>
+      <div style="margin: 20px 0; padding: 15px; background: #f9fcff; border-radius: 14px; border: 2px solid var(--border);">
+        <p style="font-weight: 700; margin-bottom: 10px;">Настройки:</p>
+        <label class="checkbox-field" style="margin-bottom: 10px; background: transparent; border: none; padding: 0;">
+          <input type="checkbox" id="chkLargeFont" class="checkbox-big">
+          <span style="font-size: 0.9em;">Очень крупный шрифт</span>
+        </label>
+        <label class="checkbox-field" style="background: transparent; border: none; padding: 0;">
+          <input type="checkbox" id="chkDarkMode" class="checkbox-big">
+          <span style="font-size: 0.9em;">🌙 Ночной режим</span>
+        </label>
+      </div>
+      <button id="btnSaveProfile" class="btn btn-primary btn-block">Сохранить</button>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalProfile">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Политика конфиденциальности -->
+  <div id="modalPrivacy" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Политика конфиденциальности</h2>
+      <div class="privacy-text" style="line-height: 1.6;">
+        <p>1. Приложение «Забота: давление и пульс» не требует подключения к интернету и работает автономно.</p>
+        <p>2. Мы не используем аналитику, трекеры и не собираем скрытые данные.</p>
+        <p>3. Вся введенная вами информация сохраняется исключительно в локальном хранилище вашего устройства.</p>
+        <p>4. Приложение не передает данные третьим лицам.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalPrivacy">Понятно</button>
+    </div>
+  </div>
+
+  <!-- Модальное окно: Пользовательское соглашение -->
+  <div id="modalTermsOfUse" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title">Пользовательское соглашение</h2>
+      <div class="privacy-text" style="font-size: 0.9em; line-height: 1.6;">
+        <p><b>1. Общие положения</b><br>1.1. Настоящее Соглашение является публичной офертой.<br>1.2. Используя Приложение, Пользователь принимает условия.</p>
+        <p><b>2. Статус Приложения</b><br>2.1. Приложение для записи показателей в личных целях.<br>2.2. <b>Не является медицинским изделием.</b> Не для диагностики или лечения.<br>2.3. Приложение не заменяет профессиональную медицинскую помощь.<br>2.4. При плохом самочувствии обращайтесь в скорую (103).</p>
+        <p><b>3. Хранение данных</b><br>3.1. Работает офлайн. Разработчик не собирает данные.<br>3.2. Данные хранятся в памяти устройства.<br>3.3. Разработчик не может восстановить данные.<br><b>3.4. Приложение не отправляет сообщения автоматически. При нажатии на кнопку «СМС» открывается стандартное приложение вашего телефона, и отправка происходит только после вашего личного подтверждения.</b></p>
+        <p><b>4. Отказ от гарантий</b><br>4.1. <b>Предоставляется «КАК ЕСТЬ».</b> Разработчик не гарантирует бесперебойную работу.<br>4.2. <b>Не несет ответственности</b> за ущерб здоровью, возникший в результате самолечения, а также за потерю данных.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" data-close="modalTermsOfUse">Понятно</button>
+    </div>
+  </div>
+
+  <!-- Кастомное окно подтверждения -->
+  <div id="modalConfirm" class="modal" hidden>
+    <div class="modal-content">
+      <h2 class="modal-title" id="confirmTitle">Подтверждение</h2>
+      <p class="modal-text" id="confirmText" style="font-size: 1.1em; color: var(--text); text-align: left; margin-bottom: 20px; line-height: 1.5;"></p>
+      <button id="btnConfirmYes" class="btn btn-primary btn-block">Да</button>
+      <button id="btnConfirmNo" class="btn btn-secondary btn-block">Отмена</button>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
